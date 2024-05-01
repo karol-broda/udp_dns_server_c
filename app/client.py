@@ -49,7 +49,7 @@ def main():
     server_port = 2053
     domain = "google.com"
     response = send_dns_query(server_ip, server_port, domain)
-    print(response)
+    print(f"res: {response}")
 
 
 if __name__ == "__main__":

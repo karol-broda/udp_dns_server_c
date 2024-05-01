@@ -1,0 +1,21 @@
+{
+    "example.com": {
+        "A": ["192.0.2.1", "192.0.2.3"],
+        "AAAA": ["2001:db8::1"],
+        "CNAME": ["alias.example.com"],
+        "NS": ["ns1.example.com", "ns2.example.com"],
+        "MX": [
+            {"priority": 10, "value": "mail1.example.com"},
+            {"priority": 20, "value": "mail2.example.com"}
+        ]
+    },
+    "test.com": {
+        "A": ["192.0.2.2"],
+        "AAAA": ["2001:db8::2"],
+        "CNAME": ["alias.test.com"],
+        "NS": ["ns1.test.com"],
+        "MX": [
+            {"priority": 5, "value": "mail.test.com"}
+        ]
+    }
+}

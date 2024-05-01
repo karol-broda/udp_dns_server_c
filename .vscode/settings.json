@@ -1,0 +1,7 @@
+{
+  "files.associations": {
+    "cjson.h": "c",
+    "inet.h": "c",
+    "in.h": "c"
+  }
+}
