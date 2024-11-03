@@ -2,6 +2,7 @@
   "files.associations": {
     "cjson.h": "c",
     "inet.h": "c",
-    "in.h": "c"
+    "in.h": "c",
+    "dns_parser.h": "c"
   }
 }
