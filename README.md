@@ -345,5 +345,5 @@ contributions are welcome! please follow these steps:
 This project is licensed under the MIT License
 
 ---
-
+![Disclaimer](https://img.shields.io/badge/Disclaimer-Important-red?style=for-the-badge)
 **Disclaimer:** this DNS server is intended for educational and testing purposes. it is not recommended to use this server in a production environment without proper security reviews and testing. (Alltough if you use it in a production environment, please contact me and tell me how it went/if you need spiritual welfare)
