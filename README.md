@@ -1,5 +1,7 @@
 # Simple DNS Server in C
+![C](https://img.shields.io/badge/C-%23A8B9CC.svg?style=for-the-badge&logo=c&logoColor=white)
 
+### about
 a (hopefully) lightweight, custom dns server implemented in c, designed to handle basic dns queries using predefined mappings from a json file. this server supports common dns record types such as a, aaaa, cname, mx, and ns records, and includes wildcard domain support.
 
 ## table of contents
