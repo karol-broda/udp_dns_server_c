@@ -7,7 +7,7 @@ typedef struct dns_record
 {
     char *domain;
     char *type;
-    char *key; 
+    char *key;
     char **values;
     int num_values;
     UT_hash_handle hh;
@@ -15,7 +15,7 @@ typedef struct dns_record
 
 extern DNSRecord *dns_records;
 
-void add_record_to_hash(const char *domain, const char *type, cJSON *values);
+void add_record_to_hash(const char *domain, const char *type, cJSON *values, const char *scope);
 void loadDNSMappings(const char *filename);
 DNSRecord *resolveRecord(const char *domain, const char *type);
 

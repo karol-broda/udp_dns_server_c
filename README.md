@@ -1,4 +1,6 @@
+
 # Simple DNS Server in C
+
 ![C](https://img.shields.io/badge/C-%23A8B9CC.svg?style=for-the-badge&logo=c&logoColor=white)
 
 ### about
@@ -109,26 +111,39 @@ a (hopefully) lightweight, custom dns server implemented in c, designed to handl
 
 the DNS mappings are defined in a JSON file located at `src/dns_mappings.json`. this file specifies the DNS records for various domains.
 
-### **Structure Overview**
+### **structure Overview**
 
-the JSON file is structured as an object where each key is a domain name, and its value is another object containing DNS record types and their corresponding values.
+the JSON file is now structured with a top-level `"domains"` object. Each key within `"domains"` is a domain name, and its value is another object containing `"records"`, and optionally `"wildcards"` and `"subdomains"`.
 
 ```json
 {
-  "example.com": {
-    "A": ["93.184.216.34"],
-    "AAAA": ["2606:2800:220:1:248:1893:25c8:1946"],
-    "CNAME": ["alias.example.com"],
-    "MX": [
-      {
-        "priority": 10,
-        "value": "mail.example.com"
+  "domains": {
+    "example.com": {
+      "records": {
+        "A": ["93.184.216.34"],
+        "AAAA": ["2606:2800:220:1:248:1893:25c8:1946"],
+        "CNAME": ["alias.example.com"],
+        "MX": [
+          {
+            "priority": 10,
+            "value": "mail.example.com"
+          }
+        ],
+        "NS": ["ns1.example.com", "ns2.example.com"]
+      },
+      "wildcards": {
+        "records": {
+          "A": ["93.184.216.35"]
+        }
+      },
+      "subdomains": {
+        "subdomain1": {
+          "records": {
+            "A": ["93.184.216.36"]
+          }
+        }
       }
-    ],
-    "NS": ["ns1.example.com", "ns2.example.com"]
-  },
-  "*.example.com": {
-    "A": ["93.184.216.35"]
+    }
   }
 }
 ```
@@ -146,7 +161,7 @@ the JSON file is structured as an object where each key is a domain name, and it
 - **A and AAAA Records:**
 
   ```json
-  "example.com": {
+  "records": {
     "A": ["93.184.216.34"],
     "AAAA": ["2606:2800:220:1:248:1893:25c8:1946"]
   }
@@ -155,7 +170,7 @@ the JSON file is structured as an object where each key is a domain name, and it
 - **CNAME Record:**
 
   ```json
-  "example.com": {
+  "records": {
     "CNAME": ["alias.example.com"]
   }
   ```
@@ -163,7 +178,7 @@ the JSON file is structured as an object where each key is a domain name, and it
 - **MX Records:**
 
   ```json
-  "example.com": {
+  "records": {
     "MX": [
       {
         "priority": 10,
@@ -180,18 +195,20 @@ the JSON file is structured as an object where each key is a domain name, and it
 - **NS Records:**
 
   ```json
-  "example.com": {
+  "records": {
     "NS": ["ns1.example.com", "ns2.example.com"]
   }
   ```
 
 - **Wildcard Domains:**
 
-  use `*` to define wildcard domains
+  Use the `"wildcards"` key within a domain to define wildcard records.
 
   ```json
-  "*.example.com": {
-    "A": ["93.184.216.35"]
+  "wildcards": {
+    "records": {
+      "A": ["93.184.216.35"]
+    }
   }
   ```
 
@@ -204,7 +221,21 @@ the JSON file is structured as an object where each key is a domain name, and it
 
 - **wildcard domains:**
   - wildcard domains match any subdomain not explicitly defined
-  - place the wildcard entry at the appropriate level in the JSON hierarchy
+  - define wildcard records under the `"wildcards"` key within the domain
+
+- **subdomains:**
+  - define subdomains under the `"subdomains"` key within the domain
+  - each subdomain has its own `"records"` object
+
+  ```json
+  "subdomains": {
+    "subdomain1": {
+      "records": {
+        "A": ["93.184.216.36"]
+      }
+    }
+  }
+  ```
 
 ## testing the DNS server
 
