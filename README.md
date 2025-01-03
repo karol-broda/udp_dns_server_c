@@ -45,7 +45,7 @@ a (hopefully) lightweight, custom dns server implemented in c, designed to handl
 
 2. **Directory Structure Overview:**
 
-   ```
+   ```tree
    .
    ├── Makefile
    ├── README.md
