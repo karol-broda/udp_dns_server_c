@@ -1,145 +1,192 @@
+# simple dns server in c
 
-# Simple DNS Server in C
+![c](https://img.shields.io/badge/C-%23A8B9CC.svg?style=for-the-badge&logo=c&logoColor=white)
 
-![C](https://img.shields.io/badge/C-%23A8B9CC.svg?style=for-the-badge&logo=c&logoColor=white)
-
-### about
-a (hopefully) lightweight, custom dns server implemented in c, designed to handle basic dns queries using predefined mappings from a json file. this server supports common dns record types such as a, aaaa, cname, mx, and ns records, and includes wildcard domain support.
+this monorepo contains a lightweight dns server implemented in c that handles basic dns queries using predefined mappings from a json file.
 
 ## table of contents
 
-- [features](#simple-features)
-- [Prerequisites](#prerequisites)
-- [Installation](#installation)
-- [Building the Project](#building-the-project)
-- [Running the DNS Server](#running-the-dns-server)
-- [DNS Mappings JSON Structure](#dns-mappings-json-structure)
-- [Testing the DNS Server](#testing-the-dns-server)
-- [Example Usage](#example-usage)
-- [Contributing](#contributing)
-- [License](#license)
+- [simple dns server in c](#simple-dns-server-in-c)
+  - [table of contents](#table-of-contents)
+  - [about](#about)
+  - [getting started](#getting-started)
+    - [prerequisites](#prerequisites)
+    - [installation](#installation)
+    - [building the project](#building-the-project)
+  - [usage](#usage)
+    - [running the dns server](#running-the-dns-server)
+    - [dns management interface](#dns-management-interface)
+      - [using the management script](#using-the-management-script)
+      - [management interface protocol](#management-interface-protocol)
+      - [scopes explained](#scopes-explained)
+    - [dns mappings structure](#dns-mappings-structure)
+      - [structure overview](#structure-overview)
+      - [supported record types](#supported-record-types)
+      - [defining records](#defining-records)
+    - [testing the server](#testing-the-server)
+  - [example usage](#example-usage)
+  - [troubleshooting](#troubleshooting)
+    - [server won't start](#server-wont-start)
+    - [management interface issues](#management-interface-issues)
+  - [security considerations](#security-considerations)
+  - [contributing](#contributing)
+  - [license](#license)
 
-## simple features
+## about
 
-- **Customizable DNS Mappings:** Define DNS records in a JSON file with support for multiple record types.
-- **Wildcard Domains:** Supports wildcard entries (e.g., `*.example.com`) to match subdomains.
-- **Common DNS Record Types:** Handles A, AAAA, CNAME, MX, and NS records.
-- **Lightweight Implementation:** Minimal dependencies and straightforward codebase for easy understanding and modification.
+a lightweight, custom dns server implemented in c, designed to handle basic dns queries using predefined mappings from a json file. supports common dns record types such as a, aaaa, cname, mx, and ns records, and includes wildcard domain support. it also features a management interface for dynamically adding and removing dns records without restarting the server.
 
-## prerequisites
+## getting started
 
-- **C Compiler:** GCC or any compatible C compiler
-- **Make:** for building the project using the provided `Makefile`.
-- **libs:**
-  - **cJSON:** included in the `lib/cJSON/` directory.
-  - **uthash:** included in the `lib/uthash/` directory.
+### prerequisites
 
-## installation
+- **c compiler:** gcc or any compatible c compiler
+- **make:** for building the project using the provided `makefile`
+- **libraries:**
+  - **cjson:** included in the `lib/cjson/` directory
+  - **uthash:** included in the `lib/uthash/` directory
+- **system dependencies:**
+  - posix threads (pthread)
+  - standard c libraries
 
-1. **clone the Repository:**
+### installation
 
+1. clone the repository:
    ```bash
    git clone https://github.com/karol-broda/udp_dns_server_c.git
    cd udp_dns_server_c
    ```
 
-2. **Directory Structure Overview:**
+### building the project
 
-   ```tree
-   .
-   ├── Makefile
-   ├── README.md
-   ├── include
-   │   ├── dns_parser.h
-   │   ├── dns_records.h
-   │   └── dns_server.h
-   ├── lib
-   │   ├── cJSON
-   │   │   ├── cJSON.c
-   │   │   └── cJSON.h
-   │   └── uthash
-   │       └── uthash.h
-   └── src
-       ├── dns_mappings.json
-       ├── dns_parser.c
-       ├── dns_server.c
-       └── main.c
-   ```
-
-## building the project
-
-1. **clean prev builds:**
+1. clean previous builds:
    ```bash
    make clean
    ```
 
-2. **compile the DNS server:**
-
+2. compile the dns server:
    ```bash
    make
    ```
+   this will compile the source files and produce an executable named `dns_server`.
 
-   This will compile the source files and produce an executable named `dns_server`
-
-## running the dns server
-
-1. **start the DNS server:**
-
+3. install the dns server (optional):
    ```bash
-   ./dns_server
+   sudo make install
    ```
+   this will install the dns server and management script to `/usr/local/bin/`.
 
-   - the server listens on port `2053` by default for now.
-   - ensure you have the necessary permissions or change the port to a non-privileged one (>1024).
+## usage
 
-2. **modify DNS port (optional):**
+### running the dns server
 
-   if you wish to change the port number, edit `DNS_PORT` in `include/dns_server.h`:
+start the dns server:
+```bash
+./dns_server
+```
 
-   ```c
-   #define DNS_PORT 2053  // change to your desired port number
-   ```
+the server listens on port `2053` by default for dns queries and the management interface listens on port `8053` by default.
 
-   recompile the project after making changes:
+you can modify the following configuration options by editing [include/dns_server.h](./include/dns_server.h):
+```c
+#define DEFAULT_DNS_PORT 2053      // dns service port
+#define DEFAULT_MGMT_PORT 8053     // management interface port
+#define DEFAULT_MAPPINGS_FILE "dns_mappings.json"  // path to dns mappings
+#define DEFAULT_TTL 3600           // default ttl for dns records
+#define DEFAULT_AUTH_TOKEN "change_this_token"     // auth token
+```
 
-   ```bash
-   make clean
-   make
-   ```
+**important:** be sure to change the default authentication token before deploying to production!
 
-## DNS Mappings JSON Structure
+### dns management interface
 
-the DNS mappings are defined in a JSON file located at `src/dns_mappings.json`. this file specifies the DNS records for various domains.
+the dns server includes a management interface that allows you to dynamically add, delete, and modify dns records without restarting the server.
 
-### **structure Overview**
+#### using the management script
 
-the JSON file is now structured with a top-level `"domains"` object. Each key within `"domains"` is a domain name, and its value is another object containing `"records"`, and optionally `"wildcards"` and `"subdomains"`.
+the easiest way to manage the dns server is using the included `dns_mgmt.sh` script:
+
+```bash
+# make the script executable (if not already)
+chmod +x dns_mgmt.sh
+
+# list all current dns records
+./dns_mgmt.sh list
+
+# add a new a record
+./dns_mgmt.sh add example.com a base 192.168.1.1
+
+# add a new mx record
+./dns_mgmt.sh add example.com mx base "10 mail.example.com"
+
+# delete a record
+./dns_mgmt.sh delete example.com a base
+
+# reload dns mappings from the configuration file
+./dns_mgmt.sh reload
+```
+
+#### management interface protocol
+
+the management interface uses a simple text-based protocol over tcp. each command follows this format:
+
+```
+<auth_token> <command> <parameters...>
+```
+
+available commands:
+- `add <domain> <type> <scope> <value>` - add a new dns record
+- `delete <domain> <type> <scope>` - delete a dns record
+- `list` - list all dns records
+- `reload` - reload dns mappings from the configuration file
+
+for example, to add a new a record manually:
+
+```bash
+echo "change_this_token add example.com a base 192.168.1.1" | nc localhost 8053
+```
+
+#### scopes explained
+
+when adding or deleting records, you need to specify a scope:
+
+- `base` - regular domain records
+- `wildcard` - wildcard domain records (*.domain)
+- `subdomain` - specific subdomain records
+
+### dns mappings structure
+
+the dns mappings are defined in a json file located at `src/dns_mappings.json`. this file specifies the dns records for various domains.
+
+#### structure overview
+
+the json file is structured with a top-level `"domains"` object. each key within `"domains"` is a domain name, and its value is another object containing `"records"`, and optionally `"wildcards"` and `"subdomains"`.
 
 ```json
 {
   "domains": {
     "example.com": {
       "records": {
-        "A": ["93.184.216.34"],
-        "AAAA": ["2606:2800:220:1:248:1893:25c8:1946"],
-        "CNAME": ["alias.example.com"],
-        "MX": [
+        "a": ["93.184.216.34"],
+        "aaaa": ["2606:2800:220:1:248:1893:25c8:1946"],
+        "cname": ["alias.example.com"],
+        "mx": [
           {
             "priority": 10,
             "value": "mail.example.com"
           }
         ],
-        "NS": ["ns1.example.com", "ns2.example.com"]
+        "ns": ["ns1.example.com", "ns2.example.com"]
       },
       "wildcards": {
         "records": {
-          "A": ["93.184.216.35"]
+          "a": ["93.184.216.35"]
         }
       },
       "subdomains": {
         "subdomain1": {
           "records": {
-            "A": ["93.184.216.36"]
+            "a": ["93.184.216.36"]
           }
         }
       }
@@ -148,38 +195,40 @@ the JSON file is now structured with a top-level `"domains"` object. Each key wi
 }
 ```
 
-### **supported record types**
+#### supported record types
 
-- **A:** ipv4 addresses
-- **AAAA:** ipv6 addresses
-- **CNAME:** canonical name records
-- **MX:** mail exchange records, with `priority` and `value`
-- **NS:** name server records
+- **a:** ipv4 addresses
+- **aaaa:** ipv6 addresses
+- **cname:** canonical name records
+- **mx:** mail exchange records, with `priority` and `value`
+- **ns:** name server records
+- **txt:** text records
+- **srv:** service records
 
-### **defining records**
+#### defining records
 
-- **A and AAAA Records:**
+- **a and aaaa records:**
 
   ```json
   "records": {
-    "A": ["93.184.216.34"],
-    "AAAA": ["2606:2800:220:1:248:1893:25c8:1946"]
+    "a": ["93.184.216.34"],
+    "aaaa": ["2606:2800:220:1:248:1893:25c8:1946"]
   }
   ```
 
-- **CNAME Record:**
+- **cname record:**
 
   ```json
   "records": {
-    "CNAME": ["alias.example.com"]
+    "cname": ["alias.example.com"]
   }
   ```
 
-- **MX Records:**
+- **mx records:**
 
   ```json
   "records": {
-    "MX": [
+    "mx": [
       {
         "priority": 10,
         "value": "mail.example.com"
@@ -192,190 +241,213 @@ the JSON file is now structured with a top-level `"domains"` object. Each key wi
   }
   ```
 
-- **NS Records:**
+- **ns records:**
 
   ```json
   "records": {
-    "NS": ["ns1.example.com", "ns2.example.com"]
+    "ns": ["ns1.example.com", "ns2.example.com"]
   }
   ```
 
-- **Wildcard Domains:**
+- **wildcard domains:**
 
-  Use the `"wildcards"` key within a domain to define wildcard records.
+  use the `"wildcards"` key within a domain to define wildcard records.
 
   ```json
   "wildcards": {
     "records": {
-      "A": ["93.184.216.35"]
+      "a": ["93.184.216.35"]
     }
   }
   ```
 
-### **notes:**
+### testing the server
 
-- **record values:**
-  - for **A** and **AAAA** records, provide an array of IP addresses as strings
-  - for **CNAME** and **NS** records, provide an array of domain names as strings
-  - for **MX** records, provide an array of objects, each with a `priority` (integer) and a `value` (domain name)
+use the `dig` command-line tool to test your dns server:
 
-- **wildcard domains:**
-  - wildcard domains match any subdomain not explicitly defined
-  - define wildcard records under the `"wildcards"` key within the domain
+```bash
+# query a record
+dig @127.0.0.1 -p 2053 example.com a
 
-- **subdomains:**
-  - define subdomains under the `"subdomains"` key within the domain
-  - each subdomain has its own `"records"` object
+# query aaaa record
+dig @127.0.0.1 -p 2053 example.com aaaa
 
-  ```json
-  "subdomains": {
-    "subdomain1": {
-      "records": {
-        "A": ["93.184.216.36"]
-      }
-    }
-  }
-  ```
+# query cname record
+dig @127.0.0.1 -p 2053 example.com cname
 
-## testing the DNS server
+# query mx record
+dig @127.0.0.1 -p 2053 example.com mx
 
-use the `dig` command-line tool to test your DNS server
+# query ns record
+dig @127.0.0.1 -p 2053 example.com ns
 
-1. **query A Record:**
-
-   ```bash
-   dig @127.0.0.1 -p 2053 example.com A
-   ```
-
-2. **query AAAA Record:**
-
-   ```bash
-   dig @127.0.0.1 -p 2053 example.com AAAA
-   ```
-
-3. **query CNAME Record:**
-
-   ```bash
-   dig @127.0.0.1 -p 2053 example.com CNAME
-   ```
-
-4. **query MX Record:**
-
-   ```bash
-   dig @127.0.0.1 -p 2053 example.com MX
-   ```
-
-5. **query NS Record:**
-
-   ```bash
-   dig @127.0.0.1 -p 2053 example.com NS
-   ```
-
-6. **query Wildcard Domain:**
-
-   ```bash
-   dig @127.0.0.1 -p 2053 sub.example.com A
-   ```
+# query wildcard domain
+dig @127.0.0.1 -p 2053 sub.example.com a
+```
 
 ## example usage
 
 here is an example of how the server handles queries:
 
-1. **start the server:**
+1. start the server:
 
    ```bash
    ./dns_server
    ```
 
-2. **example server output:**
+2. example server output:
 
    ```plaintext
-   Loading DNS mappings...
-   Adding records for domain: example.com, type: A
-   Added value: 93.184.216.34
-   Added A record for example.com with 1 values
-   DNS server started on port 2053...
+   [2025-05-21 10:15:32] [info] starting dns server...
+   [2025-05-21 10:15:32] [info] loading dns mappings from dns_mappings.json
+   [2025-05-21 10:15:32] [info] adding records for domain: example.com, type: a
+   [2025-05-21 10:15:32] [info] added a record for example.com with 1 values
+   [2025-05-21 10:15:32] [info] dns server started on port 2053
+   [2025-05-21 10:15:32] [info] dns management interface listening on port 8053
    ```
 
-3. **client query:**
+3. add a new record using the management interface:
 
    ```bash
-   dig @127.0.0.1 -p 2053 example.com A
+   ./dns_mgmt.sh add test.com a base 192.168.1.10
    ```
 
-4. **server response:**
+4. result:
 
    ```plaintext
-   Received query for domain: example.com, type: A
-   Exact match found for domain example.com and type A
-   Resolved for: example.com, type: A
-   Response sent to: 127.0.0.1
+   success: record added
    ```
 
-5. **client output:**
+5. server log output:
 
    ```plaintext
-   ; <<>> DiG 9.10.6 <<>> @127.0.0.1 -p 2053 example.com A
+   [2025-05-21 10:16:45] [info] adding records for domain: test.com, type: a
+   [2025-05-21 10:16:45] [info] added a record for test.com with 1 values
+   ```
+
+6. client query:
+
+   ```bash
+   dig @127.0.0.1 -p 2053 test.com a
+   ```
+
+7. server log output:
+
+   ```plaintext
+   [2025-05-21 10:17:10] [info] received query for domain: test.com, type: a
+   [2025-05-21 10:17:10] [info] exact match found for domain test.com and type a
+   [2025-05-21 10:17:10] [info] resolved for: test.com, type: a
+   [2025-05-21 10:17:10] [info] response sent to: 127.0.0.1
+   ```
+
+8. client output:
+
+   ```plaintext
+   ; <<>> dig 9.10.6 <<>> @127.0.0.1 -p 2053 test.com a
    ;; global options: +cmd
-   ;; Got answer:
-   ;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 12345
-   ;; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 0
-
-   ;; QUESTION SECTION:
-   ;example.com.                   IN      A
-
-   ;; ANSWER SECTION:
-   example.com.            3600    IN      A       93.184.216.34
-
-   ;; Query time: 1 msec
-   ;; SERVER: 127.0.0.1#2053(127.0.0.1)
-   ;; WHEN: Mon Jan 01 12:00:00 UTC 2024
-   ;; MSG SIZE  rcvd: 60
+   ;; got answer:
+   ;; ->>header<<- opcode: query, status: noerror, id: 12345
+   ;; flags: qr aa rd; query: 1, answer: 1, authority: 0, additional: 0
+   
+   ;; question section:
+   ;test.com.                      in      a
+   
+   ;; answer section:
+   test.com.               3600    in      a       192.168.1.10
+   
+   ;; query time: 1 msec
+   ;; server: 127.0.0.1#2053(127.0.0.1)
+   ;; when: wed may 21 10:17:10 utc 2025
+   ;; msg size  rcvd: 45
    ```
+
+## troubleshooting
+
+### server won't start
+
+if the server fails to start:
+
+1. check that the specified ports (2053 and 8053 by default) are available:
+   ```bash
+   netstat -tuln | grep 2053
+   netstat -tuln | grep 8053
+   ```
+
+2. ensure you have the necessary permissions to bind to the ports:
+   ```bash
+   # if running on ports below 1024
+   sudo ./dns_server
+   ```
+
+3. verify the dns_mappings.json file exists and is valid:
+   ```bash
+   jq . src/dns_mappings.json
+   ```
+
+### management interface issues
+
+if you're having trouble with the management interface:
+
+1. verify the authentication token is correct:
+   ```bash
+   # check the token in the source code
+   grep -r "DEFAULT_AUTH_TOKEN" include/
+   ```
+
+2. ensure tcp connectivity to the management port:
+   ```bash
+   nc -zv localhost 8053
+   ```
+
+3. check server logs for any error messages related to the management interface.
+
+## security considerations
+
+1. **authentication token**: the management interface requires an authentication token. change the default token (`default_auth_token` in `dns_server.h`) before deploying.
+
+2. **firewall rules**: configure firewall rules to restrict access to the management port (8053 by default).
+
+3. **run as non-root**: for production use, consider running the dns server as a non-privileged user after binding to the ports.
+
+4. **tls encryption**: for added security, consider implementing tls encryption for the management interface.
 
 ## contributing
 
 contributions are welcome! please follow these steps:
 
-1. **fork the repository:**
+1. fork the repository:
+   click the "fork" button at the top right of the repository page.
 
-   click the "fork" button at the top right of the repository page
-
-2. **clone your fork:**
-
+2. clone your fork:
    ```bash
    git clone https://github.com/karol-broda/udp_dns_server_c.git
    cd udp_dns_server_c
    ```
 
-3. **create a new Branch:**
-
+3. create a new branch:
    ```bash
    git checkout -b feature/your-fancy-feature-name
    ```
 
-4. **make changes and commit:**
-
+4. make changes and commit:
    ```bash
    git add .
    git commit -m "add fancy feature"
    ```
 
-5. **push to your fork:**
-
+5. push to your fork:
    ```bash
    git push origin feature/your-fancy-feature-name
    ```
 
-6. **create a pull request:**
+6. create a pull request:
+   go to the original repository and open a pull request from your forked branch.
 
-   go to the original repository and open a pull request from your forked branch
+## license
 
-## License
-
-This project is licensed under the MIT License
+this project is licensed under the mit license.
 
 ---
-![Disclaimer](https://img.shields.io/badge/Disclaimer-Important-red?style=for-the-badge)
+![disclaimer](https://img.shields.io/badge/Disclaimer-Important-red?style=for-the-badge)
 <br />
-**Disclaimer:** this DNS server is intended for educational and testing purposes. it is not recommended to use this server in a production environment without proper security reviews and testing. (Alltough if you use it in a production environment, please contact me and tell me how it went/if you need spiritual welfare)
+**disclaimer:** this dns server is intended for educational and testing purposes. it is not recommended to use this server in a production environment without proper security reviews and testing. (although if you use it in a production environment, please contact me and tell me how it went/if you need spiritual welfare)

@@ -1,5 +1,6 @@
 CC = gcc
-CFLAGS = -Wall -Wextra -O2 -Iinclude -Ilib/cJSON -Ilib/uthash
+CFLAGS = -Wall -Wextra -O2 -Iinclude -Ilib/cJSON -Ilib/uthash -pthread
+LDFLAGS = -pthread
 
 SRCDIR = src
 INCDIR = include
@@ -11,10 +12,12 @@ OBJS = $(OBJDIR)/dns_parser.o $(OBJDIR)/dns_server.o $(OBJDIR)/main.o $(OBJDIR)/
 
 TARGET = dns_server
 
+.PHONY: all clean install
+
 all: $(TARGET)
 
 $(TARGET): $(OBJS)
-	$(CC) $(CFLAGS) -o $(TARGET) $(OBJS)
+	$(CC) $(CFLAGS) -o $(TARGET) $(OBJS) $(LDFLAGS)
 
 $(OBJDIR)/dns_parser.o: $(SRCDIR)/dns_parser.c $(INCDIR)/dns_parser.h $(INCDIR)/dns_server.h | $(OBJDIR)
 	$(CC) $(CFLAGS) -c $(SRCDIR)/dns_parser.c -o $(OBJDIR)/dns_parser.o
@@ -34,4 +37,6 @@ $(OBJDIR):
 clean:
 	rm -f $(TARGET) $(OBJDIR)/*.o
 
-.PHONY: all clean
+install: $(TARGET)
+	install -m 755 $(TARGET) /usr/local/bin/
+	install -m 755 dns_mgmt.sh /usr/local/bin/dns_mgmt
