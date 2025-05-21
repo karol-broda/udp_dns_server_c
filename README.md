@@ -2,7 +2,7 @@
 
 ![c](https://img.shields.io/badge/C-%23A8B9CC.svg?style=for-the-badge&logo=c&logoColor=white)
 
-this monorepo contains a lightweight dns server implemented in c that handles basic dns queries using predefined mappings from a json file.
+a (hopefully) lightweight, custom dns server implemented in c, designed to handle basic dns queries using predefined mappings from a json file. this server supports common dns record types such as a, aaaa, cname, mx, and ns records, and includes wildcard domain support.
 
 ## table of contents
 
@@ -348,13 +348,13 @@ here is an example of how the server handles queries:
    ;; got answer:
    ;; ->>header<<- opcode: query, status: noerror, id: 12345
    ;; flags: qr aa rd; query: 1, answer: 1, authority: 0, additional: 0
-   
+
    ;; question section:
    ;test.com.                      in      a
-   
+
    ;; answer section:
    test.com.               3600    in      a       192.168.1.10
-   
+
    ;; query time: 1 msec
    ;; server: 127.0.0.1#2053(127.0.0.1)
    ;; when: wed may 21 10:17:10 utc 2025
